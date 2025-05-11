@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:icon="@drawable/tab_icon1"
+        android:id="@+id/menu_first"
+        android:title="HOME"/>
+    <item
+        android:icon="@drawable/tab_icon2"
+        android:id="@+id/menu_second"
+        android:title="PATH"/>
+    <item
+        android:icon="@drawable/tab_icon3"
+        android:id="@+id/menu_third"
+        android:title="LOG"/>
+    <item
+        android:icon="@drawable/tab_icon4"
+        android:id="@+id/menu_fourth"
+        android:title="MANAGE"/>
+</menu>
