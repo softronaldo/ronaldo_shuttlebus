@@ -31,35 +31,45 @@ class PathFragment : Fragment(), OnMapReadyCallback {
     private val startMarker = Marker()
     private val endMarker = Marker()
 
-    // **여기에 본인의 Client ID와 Client Secret을 정확하게 입력하세요!**
     private val naverClientId = "baa8zur66x"
     private val naverClientSecret = "6hdqvtnF3u4YKVHSJNbibfkZTFVqJ4WTvgJ4BsrR"
 
     // 출발지와 도착지 좌표 (실제 사용할 좌표로 변경하세요!)
-    private val startLatLng = LatLng(37.35782, 126.73453) // 한국공학대학교
-    private val endLatLng = LatLng(37.34151, 126.73248)   // 정왕역
+    private val startLatLng = LatLng(37.3515, 126.7427) // 한국공학대학교 (예시)
+    private val endLatLng = LatLng(37.34151, 126.73248)   // 정왕역 (예시)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d("PathFragment_Lifecycle", "onCreate 호출됨")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        Log.d("PathFragment_Lifecycle", "onCreateView 호출됨")
         return inflater.inflate(R.layout.fragment_path, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("PathFragment_Lifecycle", "onViewCreated 호출됨")
 
         val fm = childFragmentManager
         val mapFragment = fm.findFragmentById(R.id.map) as MapFragment?
             ?: MapFragment.newInstance().also {
                 fm.beginTransaction().add(R.id.map, it).commit()
+                Log.d("PathFragment_Lifecycle", "MapFragment 새로 생성됨")
             }
 
+        Log.d("PathFragment_Lifecycle", "MapFragment: $mapFragment")
         mapFragment.getMapAsync(this)
+        Log.d("PathFragment_Lifecycle", "getMapAsync 호출됨")
     }
 
     @UiThread
     override fun onMapReady(naverMap: NaverMap) {
+        Log.d("PathFragment_Lifecycle", "onMapReady 호출됨")
         this.naverMap = naverMap
         setupMapUiSettings(naverMap)
         drawRouteBetweenStops(naverMap)
@@ -82,16 +92,20 @@ class PathFragment : Fragment(), OnMapReadyCallback {
 
     private fun addMarkers(naverMap: NaverMap) {
         startMarker.position = startLatLng
-        startMarker.captionText = "출발지"
+        startMarker.captionText = "정왕역"
+        startMarker.width = 50
+        startMarker.height = 70
         startMarker.map = naverMap
 
         endMarker.position = endLatLng
-        endMarker.captionText = "도착지"
+        endMarker.captionText = "한국공학대학교 정문"
+        endMarker.width = 50
+        endMarker.height = 70
         endMarker.map = naverMap
     }
 
     private fun drawRouteBetweenStops(naverMap: NaverMap) {
-        val url = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?" +
+        val url = "https://maps.apigw.ntruss.com/map-direction/v1/driving?" +
                 "start=${startLatLng.longitude},${startLatLng.latitude}&" +
                 "goal=${endLatLng.longitude},${endLatLng.latitude}&" +
                 "option=trafast"
@@ -114,8 +128,8 @@ class PathFragment : Fragment(), OnMapReadyCallback {
                     try {
                         val jsonResponse = JSONObject(body)
                         val route = jsonResponse.getJSONObject("route")
-                        val traoptimal = route.getJSONArray("traoptimal")
-                        val path = traoptimal.getJSONObject(0).getJSONArray("path")
+                        val trafast = route.getJSONArray("trafast") // "traoptimal" 대신 "trafast" 사용
+                        val path = trafast.getJSONObject(0).getJSONArray("path") // "trafast" 배열의 첫 번째 요소에서 "path" 접근
                         val coords = mutableListOf<LatLng>()
 
                         for (i in 0 until path.length()) {
@@ -125,11 +139,13 @@ class PathFragment : Fragment(), OnMapReadyCallback {
                             coords.add(LatLng(lat, lon))
                         }
 
-                        activity?.runOnUiThread {
-                            pathOverlay.coords = coords
-                            pathOverlay.color = Color.BLUE
-                            pathOverlay.width = 10
-                            pathOverlay.map = naverMap
+                        activity?.let {
+                            it.runOnUiThread {
+                                pathOverlay.coords = coords
+                                pathOverlay.color = Color.BLUE
+                                pathOverlay.width = 15
+                                pathOverlay.map = naverMap
+                            }
                         }
 
                     } catch (e: Exception) {
