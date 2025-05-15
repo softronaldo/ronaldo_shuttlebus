@@ -225,11 +225,6 @@ object SupabaseRepository {
         departureName: String,
         destinationName: String
     ) {
-//        val converted = if (departureName == "정왕역")
-//            destinationName to departureName
-//        else
-//            departureName to destinationName
-
         Log.d("PANGMOO", "UPDATE ARRIVE - ${departureName}/${destinationName}")
 
         supabase
@@ -238,8 +233,6 @@ object SupabaseRepository {
                 {
                     TinoLocation::departure_name setTo departureName
                     TinoLocation::destination_name setTo destinationName
-//                    TinoLocation::departure_name setTo converted.first
-//                    TinoLocation::destination_name setTo converted.second
                 }
             ) {
                 filter {
@@ -249,6 +242,43 @@ object SupabaseRepository {
 
         Log.d("PANGMOO", "UPDATE ARRIVE DONE")
     }
+
+    suspend fun updateStatus(driverId: String, status: String) {
+        Log.d("PANGMOO", "UPDATE STATUS - driverId: $driverId, status: $status")
+        supabase
+            .from("tino")
+            .update(
+                {
+                    TinoLocation::status setTo status
+                }
+            ) {
+                filter {
+                    TinoLocation::driver_id eq driverId
+                }
+            }
+            .also {
+                Log.d("PANGMOO", "UPDATE STATUS DONE")
+            }
+    }
+
+    suspend fun updateTinoStatus(driverId: String, status: String) {
+        Log.d("PANGMOO", "UPDATE TINO STATUS - driverId: $driverId, status: $status")
+        supabase
+            .from("tino")
+            .update(
+                {
+                    TinoLocation::status setTo status
+                }
+            ) {
+                filter {
+                    TinoLocation::driver_id eq driverId
+                }
+            }
+            .also {
+                Log.d("PANGMOO", "UPDATE TINO STATUS DONE")
+            }
+    }
+
     suspend fun fetchCurrentSpeed(driverId: String): Int? {
         return withContext(Dispatchers.IO) {
             try {
@@ -430,7 +460,5 @@ object SupabaseRepository {
         }
     }
 }
-
-
 
 

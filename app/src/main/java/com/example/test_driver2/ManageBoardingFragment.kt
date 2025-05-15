@@ -1,6 +1,7 @@
 package com.example.test_driver2
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -15,7 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.example.test_driver2.R  // 올바른 R 파일 임포트 확인
+import com.example.test_driver2.R
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraAnimation
 import com.naver.maps.map.CameraUpdate
@@ -44,9 +45,12 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
     private var isDepartingFromTukorea = true  // 출발지 상태 (초기값은 한국공학대학교 정문)
     private var currentLocation: LatLng? = null  // 현재 위치
 
-    // supabase 상태 연결해서 사용하세요
     private var departureName = "한국공학대학교 정문"
     private var destinationName = "정왕역"
+
+    // SharedPreferences 키
+    private val PREF_NAME = "boarding_status"
+    private val KEY_STATUS = "current_status"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +69,6 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
         bodyPassengerTextView = view.findViewById(R.id.body_passenger)
         nextstation = view.findViewById(R.id.next_station1)
 
-
         return view
     }
 
@@ -78,7 +81,20 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
         fetchBodyPassengerCount()
         fetnextstationname1()
 
+        // SharedPreferences에서 저장된 상태를 읽어와 UI 초기화
+        val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val savedStatus = prefs.getString(KEY_STATUS, "")
 
+        if (savedStatus == "대기 중") {
+            bodyDestinationTextView.text = "대기 중"
+            nextstation.text = "대기 중"
+        } else if (savedStatus?.isNotEmpty() == true) {
+            bodyDestinationTextView.text = savedStatus
+            nextstation.text = savedStatus
+        } else {
+            bodyDestinationTextView.text = departureName
+            nextstation.text = departureName
+        }
     }
 
     private fun permissionLauncher() {
@@ -91,9 +107,37 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupButtons(view: View) { // 뷰 파라미터 추가
-        val arriveStationLayout: LinearLayout = view.findViewById(R.id.arrive_station)
+        val arriveStationLayout: LinearLayout = view.findViewById(R.id.arrive_station) // ID 수정
+        val bodyDestinationTextView: TextView = view.findViewById(R.id.body_destination)
+        val nextstation: TextView = view.findViewById(R.id.next_station1)
+
         arriveStationLayout.setOnClickListener {
-            // 출발지와 도착지 변경 로직
+            bodyDestinationTextView.text = "대기 중"
+            nextstation.text = "대기 중"
+            Toast.makeText(requireContext(), "대기 상태로 변경되었습니다.", Toast.LENGTH_SHORT).show()
+
+            // SharedPreferences에 상태 저장
+            val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(KEY_STATUS, "대기 중").apply()
+
+            // tino 테이블의 status를 "대기 중"으로 업데이트
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    SupabaseRepository.updateTinoStatus(driverId, "대기 중")
+                    Log.d("Supabase", "tino 테이블 상태를 '대기 중'으로 업데이트 성공")
+                } catch (e: Exception) {
+                    Log.e("Supabase", "tino 테이블 상태 업데이트 실패: ${e.message}")
+                    // 오류 처리 (예: 토스트 메시지 표시)
+                    activity?.runOnUiThread {
+                        Toast.makeText(requireContext(), "상태 업데이트에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        val finishButtonLayout: LinearLayout = view.findViewById(R.id.finish_button)
+        finishButtonLayout.setOnClickListener {
+            // 출발지와 도착지 변경 로직 (기존 코드 유지)
             val temp = departureName
             departureName = destinationName
             destinationName = temp
@@ -104,9 +148,24 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
                     departureName = departureName,
                     destinationName = destinationName
                 )
+                // tino 테이블의 status를 "운행 중"으로 업데이트
+                try {
+                    SupabaseRepository.updateTinoStatus(driverId, "운행 중")
+                    Log.d("Supabase", "tino 테이블 상태를 '운행 중'으로 업데이트 성공")
+                } catch (e: Exception) {
+                    Log.e("Supabase", "tino 테이블 상태 업데이트 실패: ${e.message}")
+                    // 오류 처리 (예: 토스트 메시지 표시)
+                    activity?.runOnUiThread {
+                        Toast.makeText(requireContext(), "상태 업데이트에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
 
-            Toast.makeText(requireContext(), "도착완료", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "탑승완료", Toast.LENGTH_SHORT).show()
+
+            // SharedPreferences에 변경된 출발지/도착지 상태 저장
+            val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(KEY_STATUS, departureName).apply()
         }
     }
 
@@ -137,12 +196,18 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
 
     private fun fetchBodyDestination() {
         lifecycleScope.launch {
-            val tinoLocation = SupabaseRepository.bodydestination(driverId)
-            tinoLocation?.let {
-                bodyDestinationTextView.text = it.departure_name
-            } ?: run {
-                Log.w("body", "bodydestination에서 데이터를 가져오지 못했습니다.")
-                bodyDestinationTextView.text = "도착지 정보 없음"
+            val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val savedStatus = prefs.getString(KEY_STATUS, "")
+
+            // "대기 중" 상태가 아니면 Supabase에서 데이터를 가져와 업데이트
+            if (savedStatus != "대기 중") {
+                val tinoLocation = SupabaseRepository.bodydestination(driverId)
+                tinoLocation?.let {
+                    bodyDestinationTextView.text = it.departure_name
+                } ?: run {
+                    Log.w("body", "bodydestination에서 데이터를 가져오지 못했습니다.")
+                    bodyDestinationTextView.text = "도착지 정보 없음"
+                }
             }
         }
     }
@@ -160,11 +225,17 @@ class ManageBoardingFragment : Fragment(), OnMapReadyCallback {
 
     private fun fetnextstationname1() {
         lifecycleScope.launch {
-            val next_station = SupabaseRepository.bodydeparture(driverId)
-            next_station?.let {
-                nextstation.text = it.destination_name
-            } ?: run {
-                nextstation.text = "정보 없음"
+            val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val savedStatus = prefs.getString(KEY_STATUS, "")
+
+            // "대기 중" 상태가 아니면 Supabase에서 데이터를 가져와 업데이트
+            if (savedStatus != "대기 중") {
+                val next_station = SupabaseRepository.bodydeparture(driverId)
+                next_station?.let {
+                    nextstation.text = it.destination_name
+                } ?: run {
+                    nextstation.text = "정보 없음"
+                }
             }
         }
     }

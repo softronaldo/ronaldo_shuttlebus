@@ -127,8 +127,9 @@
                             android:layout_width="wrap_content"
                             android:text="예상 도착"/>
                         <TextView
+                            android:id="@+id/estimated_time"
                             android:textColor="#1F2937"
-                            android:textSize="16sp"
+                            android:textSize="13sp"
                             android:textStyle="bold"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
@@ -143,20 +144,8 @@
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:orientation="vertical">
-                        <TextView
-                            android:textColor="#4B5563"
-                            android:textSize="14sp"
-                            android:layout_marginBottom="4dp"
-                            android:layout_height="wrap_content"
-                            android:layout_width="wrap_content"
-                            android:text="남은 거리" />
-                        <TextView
-                            android:textColor="#1F2937"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_height="wrap_content"
-                            android:layout_width="wrap_content"
-                            android:text="2.5 km" />
+
+
                     </LinearLayout>
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -173,8 +162,9 @@
                             android:layout_width="wrap_content"
                             android:text="남은 시간" />
                         <TextView
+                            android:id="@+id/left_time"
                             android:textColor="#1F2937"
-                            android:textSize="16sp"
+                            android:textSize="13sp"
                             android:textStyle="bold"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
