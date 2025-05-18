@@ -113,7 +113,7 @@ class PathFragment : Fragment(), OnMapReadyCallback {
         this.naverMap = naverMap
         setupMapUiSettings(naverMap)
         addMarkers(naverMap)
-        startLocationTracking() // 위치 추적 및 경로 업데이트 시작
+        startLocationTracking()
 
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
@@ -124,11 +124,10 @@ class PathFragment : Fragment(), OnMapReadyCallback {
             naverMap.locationTrackingMode = LocationTrackingMode.Follow
         } else {
             Toast.makeText(requireContext(), "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
-            // 필요하다면 권한 요청 로직 추가
+
         }
 
-        // 초기 남은 시간 업데이트 시작 (더 이상 API 기반이 아니므로 제거 또는 수정)
-        // startLeftTimeUpdate()
+
     }
 
     private fun setupMapUiSettings(naverMap: NaverMap) {
@@ -163,8 +162,8 @@ class PathFragment : Fragment(), OnMapReadyCallback {
                     val currentLatLng = LatLng(it.latitude, it.longitude)
                     Log.d("Location", "Current Location (Flow): $currentLatLng")
                     updateMapCamera(currentLatLng)
-                    drawRouteAndGetTime(currentLatLng) // 경로 및 예상 시간 업데이트
-                    calculateAndDisplayEta(currentLatLng) // ETA 업데이트 (속도 기반)
+                    drawRouteAndGetTime(currentLatLng)
+                    calculateAndDisplayEta(currentLatLng)
                 }
             }
         }
@@ -204,7 +203,7 @@ class PathFragment : Fragment(), OnMapReadyCallback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e("Direction", "$destinationName API 호출 실패: ${e.message}")
                 activity?.runOnUiThread {
-                    pathOverlay.map = null // 오류 발생 시 경로 제거
+                    pathOverlay.map = null
                 }
             }
 
@@ -236,20 +235,20 @@ class PathFragment : Fragment(), OnMapReadyCallback {
                         } else {
                             Log.w("Direction", "$destinationName trafast 배열이 비어 있습니다.")
                             activity?.runOnUiThread {
-                                pathOverlay.map = null // 경로 데이터 없음
+                                pathOverlay.map = null
                             }
                         }
 
                     } catch (e: Exception) {
                         Log.e("Direction", "$destinationName JSON 파싱 에러: ${e.message}")
                         activity?.runOnUiThread {
-                            pathOverlay.map = null // 파싱 오류 시 경로 제거
+                            pathOverlay.map = null
                         }
                     }
                 } else {
                     Log.e("Direction", "$destinationName API 응답 실패: ${response.code} - $body")
                     activity?.runOnUiThread {
-                        pathOverlay.map = null // 응답 실패 시 경로 제거
+                        pathOverlay.map = null
                     }
                 }
             }
@@ -257,7 +256,7 @@ class PathFragment : Fragment(), OnMapReadyCallback {
     }
 
     private suspend fun getCurrentSpeed(): Int {
-        val speed = SupabaseRepository.fetchCurrentSpeed("3f6941e6-835e-4c62-9f4b-b49617cf312e") // 실제 driverId로 변경
+        val speed = SupabaseRepository.fetchCurrentSpeed("3f6941e6-835e-4c62-9f4b-b49617cf312e")
         Log.d("Speed", "Current Speed from Supabase: $speed")
         return speed ?: 0
     }
@@ -278,11 +277,11 @@ class PathFragment : Fragment(), OnMapReadyCallback {
         val currentSpeedKph = getCurrentSpeed()
         val currentSpeedMps = currentSpeedKph.toDouble() / 3.6
 
-        // 정왕역 ETA 계산
+        // 정왕역
         val distanceToJeongwang = calculateDistance(currentLatLng, jeongwangStationLatLng)
         jeongwangEtaMinutes = if (currentSpeedMps > 0) (distanceToJeongwang / currentSpeedMps / 60).roundToInt() else 0
 
-        // 한국공학대학교 정문 ETA 계산
+        // 한국공학대학교 정문
         val distanceToKoreaTech = calculateDistance(currentLatLng, koreaTechFrontGateLatLng)
         koreaTechEtaMinutes = if (currentSpeedMps > 0) (distanceToKoreaTech / currentSpeedMps / 60).roundToInt() else 0
 
@@ -295,7 +294,7 @@ class PathFragment : Fragment(), OnMapReadyCallback {
 
         leftTimeTextView.text = "(정왕역: $jeongwangEtaText / \n 한국공학대학교: $koreaTechEtaText)"
 
-        // 도착 예정 시각 업데이트
+
         val currentTime = Calendar.getInstance()
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 

@@ -133,7 +133,7 @@
                             android:textStyle="bold"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
-                            android:text="08:45 AM"/>
+                            android:text="00:00"/>
                     </LinearLayout>
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -168,7 +168,7 @@
                             android:textStyle="bold"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
-                            android:text="10 분" />
+                            android:text="0 분" />
                     </LinearLayout>
                 </LinearLayout>
                 <LinearLayout

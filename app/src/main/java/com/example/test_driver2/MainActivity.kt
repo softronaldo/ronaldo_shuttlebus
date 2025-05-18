@@ -33,10 +33,10 @@ class MainActivity : AppCompatActivity() {
             setSupportActionBar(binding.toolbar)
             Log.d("JEHEE", "setSupportActionBar() 호출 완료, toolbar: ${binding.toolbar}")
 
-            // "School Shuttle Driver"에 대한 SpannableString 생성 (onCreate에서 설정)
+
             val titleText = "School Shuttle Driver"
             val spannableString = SpannableString(titleText)
-            val color = ContextCompat.getColor(this, R.color.blue) // res/values/colors.xml에 정의된 색상 사용
+            val color = ContextCompat.getColor(this, R.color.blue)
             spannableString.setSpan(
                 ForegroundColorSpan(color),
                 0,
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             )
             spannableString.setSpan(
-                StyleSpan(Typeface.BOLD), // 굵게 스타일 적용
+                StyleSpan(Typeface.BOLD),
                 0,
                 titleText.length,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("JEHEE", "bottomNavigation.setOnItemSelectedListener 호출됨, item ID: ${item.itemId}")
                 when (item.itemId) {
                     R.id.menu_first -> {
-                        // "School Shuttle Driver"에 색상 및 굵게 스타일 적용
+
                         val titleText = "School Shuttle Driver"
                         val spannableString = SpannableString(titleText)
                         val color = ContextCompat.getColor(this@MainActivity, R.color.blue)
@@ -88,10 +88,10 @@ class MainActivity : AppCompatActivity() {
                         return@setOnItemSelectedListener true
                     }
                     R.id.menu_second -> {
-                        // "운행 경로"에 색상 및 굵게 스타일 적용
+
                         val titleText = "운행 경로"
                         val spannableString = SpannableString(titleText)
-                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)  // 동일한 색상 사용
+                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)
                         spannableString.setSpan(
                             ForegroundColorSpan(color),
                             0,
@@ -112,10 +112,10 @@ class MainActivity : AppCompatActivity() {
                         return@setOnItemSelectedListener true
                     }
                     R.id.menu_third -> {
-                        // "운행 기록"에 색상 및 굵게 스타일 적용
+
                         val titleText = "운행 기록"
                         val spannableString = SpannableString(titleText)
-                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)  // 동일한 색상 사용
+                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)
                         spannableString.setSpan(
                             ForegroundColorSpan(color),
                             0,
@@ -135,10 +135,10 @@ class MainActivity : AppCompatActivity() {
                         return@setOnItemSelectedListener true
                     }
                     R.id.menu_fourth -> {
-                        // "탑승자 관리"에 색상 및 굵게 스타일 적용
+
                         val titleText = "탑승자 관리"
                         val spannableString = SpannableString(titleText)
-                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)  // 동일한 색상 사용
+                        val color = ContextCompat.getColor(this@MainActivity, R.color.blue)
                         spannableString.setSpan(
                             ForegroundColorSpan(color),
                             0,

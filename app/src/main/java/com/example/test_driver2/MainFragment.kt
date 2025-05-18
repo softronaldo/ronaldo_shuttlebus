@@ -3,6 +3,8 @@ package com.example.test_driver2
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,16 +25,19 @@ import kotlinx.coroutines.launch
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 class MainFragment : Fragment(), OnMapReadyCallback {
-    private var naverMap: NaverMap? = null // nullable로 변경
+    private var naverMap: NaverMap? = null
     private lateinit var locationSource: FusedLocationSource
     private lateinit var currentSpeedTextView: TextView
     private lateinit var passengerCountTextView: TextView
     private lateinit var mainDestinationTextView: TextView
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
-    private var mapFragment: MapFragment? = null // 네이버 지도 SDK의 MapFragment 타입
+    private var mapFragment: MapFragment? = null
 
     private val driverId = "3f6941e6-835e-4c62-9f4b-b49617cf312e"
     private var isLocationPermissionGranted = false
+
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var speedUpdateRunnable: Runnable
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,7 +56,7 @@ class MainFragment : Fragment(), OnMapReadyCallback {
         passengerCountTextView = view.findViewById(R.id.passenger_text)
         mainDestinationTextView = view.findViewById(R.id.main_destination)
 
-        // 위치 권한 확인 및 요청
+
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -71,7 +76,7 @@ class MainFragment : Fragment(), OnMapReadyCallback {
             Log.d("jehee", "ActivityCompat.requestPermissions() 호출됨")
         }
 
-        // MapFragment 설정
+
         val fm = childFragmentManager
         mapFragment = fm.findFragmentById(R.id.mapFragment_main) as? MapFragment
         Log.d("jehee", "findFragmentById(R.id.mapFragment_main) 결과: $mapFragment")
@@ -83,12 +88,21 @@ class MainFragment : Fragment(), OnMapReadyCallback {
                 Log.d("jehee", "새로운 MapFragment 생성 및 추가 트랜잭션 커밋됨: $it")
             }
         }
-        mapFragment?.getMapAsync(this) // 안전한 호출 사용
+        mapFragment?.getMapAsync(this)
         Log.d("jehee", "mapFragment?.getMapAsync(this) 호출됨")
 
         fetchSpeedAndUpdateTextView()
         fetchPassengerCountAndUpdateTextView()
         updateMainDestination()
+
+
+        speedUpdateRunnable = Runnable {
+            fetchSpeedAndUpdateTextView()
+            handler.postDelayed(speedUpdateRunnable, 1000)
+        }
+
+
+        handler.postDelayed(speedUpdateRunnable, 1000)
 
         swipeRefreshLayout.setOnRefreshListener {
             fetchSpeedAndUpdateTextView()
@@ -116,7 +130,7 @@ class MainFragment : Fragment(), OnMapReadyCallback {
                 }
             } else {
                 Log.w("jehee", "위치 권한 거부됨 - onRequestPermissionsResult")
-                // 권한 거부 시 처리
+
             }
         }
     }
@@ -169,6 +183,12 @@ class MainFragment : Fragment(), OnMapReadyCallback {
             }
             Log.d("jehee", "updateMainDestination() 완료")
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        handler.removeCallbacks(speedUpdateRunnable)
+        Log.d("jehee", "onDestroyView() 호출됨, handler에서 speedUpdateRunnable 제거됨")
     }
 
     companion object {
